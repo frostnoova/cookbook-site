@@ -15,13 +15,13 @@ class RecipeAdmin(admin.ModelAdmin):
 
     @admin.display(description="Продукты")
     def get_products(self, instance):
-        return [product for product in instance.products.all()]
+        return [product for product in instance.description.select_related('product')]
 
 
 @admin.register(RecipeDescription)
 class RecipeDescriptionAdmin(admin.ModelAdmin):
     list_display = ['id', 'product', 'product_id', 'recipe', 'recipe_id','weight']
-    list_display_links = ['id']
+    list_display_links = ['recipe']
 
 
 @admin.register(Product)

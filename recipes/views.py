@@ -3,38 +3,61 @@ from .models import Recipe, Product
 from .utils import show_recipes_without_product, cook_recipe, add_product_to_recipe
 
 
-functions_ = {'show_recipes': show_recipes_without_product,
-              'cook_recipe': cook_recipe,
-              'add_product': add_product_to_recipe}
 
-bools_ = {'true':True,
-          'false': False}
+def validate_request(request):
 
-def recipes(request):
-   
-    if func := request.GET.get('func'):
-        print(request.GET)
-        recipes_ = functions_[func](*request.GET.values())
-    else:
-        recipes_ = None
+    if request := request.GET:
+        print(request)
+        return request
 
-    print(recipes_)
+    return None
+
+
+def show_recipes(request):
+
+    """ /show_recipes/?product_id=1&exclude=1 """
+
+    request_ = validate_request(request)
+
+    result = show_recipes_without_product(*request_.values())
 
     data = {
         'title': 'Рецепты',
-        'recipes': recipes_
+        'recipes': result
     }
 
     return render(request, "recipes/index.html", context=data)
 
 
-def products(request):
+def add_product(request):
+
+    """ /add_product/?recipe_id=1&product_id=1&weight=500 """
     
-    products_ = Product.objects.all()
+    request_ = validate_request(request)
+
+    result = add_product_to_recipe(*request_.values())
 
     data = {
-        'title': 'Продукты',
-        'products': products_
+        'title': 'Добавление продуктов',
+        'result': result,
+        
     }
 
-    return render(request, "recipes/products.html", context=data)
+    return render(request, "recipes/add_products.html", context=data)
+
+
+def cook_products(request):
+    
+    """/cook_products/?recipe_id=5"""
+
+    request_ = validate_request(request)
+
+    result = cook_recipe(*request_.values())
+    print(result)
+
+    data = {
+        'title': 'Приготовление продуктов',
+        'products': result
+    }
+
+    return render(request, "recipes/cook_products.html", context=data)
