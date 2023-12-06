@@ -3,8 +3,8 @@ from django.db import models
 
 class Product(models.Model):
 
-    name = models.CharField('Название продукта', max_length=100, db_index=True)
-    quantity_cooked = models.PositiveSmallIntegerField('Приготовлено блюд',default=0)
+    name = models.CharField('Название продукта', max_length=100, db_index=True, unique=True)
+    quantity_cooked = models.PositiveSmallIntegerField('Приготовлено блюд', default=0)
 
     class Meta:
         ordering = ('name', )
@@ -30,13 +30,11 @@ class RecipeDescription(models.Model):
     
 
     class Meta:
-        # constraints = [
-        #     models.UniqueConstraint(
-        #         fields=('product', 'recipe'),
-        #         name='unique_recipe_description')
-        # ]
-
-        ordering = ('recipe_id', )
+        constraints = [
+            models.UniqueConstraint(
+                fields=('product', 'recipe'),
+                name='unique_recipe_description')
+        ]
 
     def __str__(self):
         return f'{self.product.name} {self.weight} г'
