@@ -1,40 +1,30 @@
 from .models import Recipe, RecipeDescription
-from django.core.exceptions import ObjectDoesNotExist
-from django.db import transaction
+from django.db import IntegrityError
 
 
 def add_product_to_recipe(recipe_id, product_id, weight):
     
     recipe_id, product_id, weight = map(int, (recipe_id, product_id, weight))
-    print(f"{recipe_id = }, {product_id = }, {weight = }")
 
     try:
-        Recipe.objects.get(id=recipe_id)
+        product_object, status =  RecipeDescription.objects.select_related('recipe').select_related('product').update_or_create(recipe_id=recipe_id, 
+                                                                                                                                product_id=product_id, 
+                                                                                                                                defaults={"weight": weight})
+    except IntegrityError:
+        return "Такого рецепта нет!"
 
-    except ObjectDoesNotExist:
-        return 'Такого рецепта нет!'
-
-    filter_ = RecipeDescription.objects.select_related('product').select_for_update().filter(recipe_id=recipe_id, product_id=product_id)
-    print(filter_)
-    if len(filter_):
-
-        name = filter_[0].product.name
-        filter_.update(recipe_id=recipe_id,product_id=product_id, weight=weight)
-        return f'Вес продукта "{name}" обновлен'
+    if status:
+        return f'Продукт {product_object.product.name} добавлен в рецепт'
     
-    filter_.create(recipe_id=recipe_id, product_id=product_id, weight=weight)
+    return f'Вес продукта "{product_object.product.name}" обновлен' 
     
-    return 'Продукт добавлен в рецепт'
 
 
 def cook_recipe(recipe_id):
 
     products = RecipeDescription.objects.select_related('product').select_for_update().filter(recipe_id=recipe_id)
     
-    with transaction.atomic():
-        for model in products.iterator():
-            model.product.quantity_cooked += 1
-            model.product.save()
+
 
     return products
 

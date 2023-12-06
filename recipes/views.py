@@ -1,3 +1,4 @@
+from django.http import HttpResponse
 from django.shortcuts import render
 from .models import Recipe, Product
 from .utils import show_recipes_without_product, cook_recipe, add_product_to_recipe
@@ -61,3 +62,7 @@ def cook_products(request):
     }
 
     return render(request, "recipes/cook_products.html", context=data)
+
+
+def index(request):
+    return HttpResponse("Hello")
