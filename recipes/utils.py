@@ -1,15 +1,17 @@
-from .models import Recipe, RecipeDescription
 from django.db import IntegrityError
+from django.db.models.expressions import F
+from django.db.models.query_utils import Q
+from .models import Product, Recipe, RecipeDescription
 
 
 def add_product_to_recipe(recipe_id, product_id, weight):
-    
+
     recipe_id, product_id, weight = map(int, (recipe_id, product_id, weight))
 
     try:
-        product_object, status =  RecipeDescription.objects.select_related('recipe').select_related('product').update_or_create(recipe_id=recipe_id, 
-                                                                                                                                product_id=product_id, 
-                                                                                                                                defaults={"weight": weight})
+        product_object, status =  RecipeDescription.objects.select_related('product').update_or_create(recipe_id=recipe_id, 
+                                                                                                        product_id=product_id, 
+                                                                                                        defaults={"weight": weight})
     except IntegrityError:
         return "Такого рецепта нет!"
 
@@ -17,25 +19,19 @@ def add_product_to_recipe(recipe_id, product_id, weight):
         return f'Продукт {product_object.product.name} добавлен в рецепт'
     
     return f'Вес продукта "{product_object.product.name}" обновлен' 
-    
 
 
-def cook_recipe(recipe_id):
+def cook_recipe(recipe_id, update_value=1):
 
-    products = RecipeDescription.objects.select_related('product').select_for_update().filter(recipe_id=recipe_id)
-    
+    recipe_id = int(recipe_id)
+
+    products_id = RecipeDescription.objects.select_related('product').filter(recipe_id=recipe_id).values_list('product_id', flat=True)
+
+    return Product.objects.filter(id__in=products_id).update(quantity_cooked=F('quantity_cooked')+update_value)
 
 
-    return products
+def show_recipes_without_product(product_id, weight=10):
 
-def show_recipes_without_product(product_id, exclude, weight=10):
+    product_id = int(product_id)
 
-    product_id, exclude = map(int, (product_id, exclude))
-
-    print(f"{product_id = }, {exclude = }")
-    if exclude:
-        print("exclude")
-        return Recipe.objects.prefetch_related('description').exclude(products__id=product_id, description__weight__lte=weight)
-
-    return Recipe.objects.prefetch_related('description').filter(products__id=product_id, description__weight__lte=weight)
-
+    return Recipe.objects.prefetch_related('description').exclude(Q(products__id=product_id) & Q(description__weight__gte=weight)).values('id', "name")
