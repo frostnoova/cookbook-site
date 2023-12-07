@@ -16,7 +16,7 @@ def validate_request(request):
 
 def show_recipes(request):
 
-    """ /show_recipes/?product_id=1&exclude=1 """
+    """ /show_recipes/?product_id=1 """
 
     request_ = validate_request(request)
 
@@ -35,7 +35,7 @@ def add_product(request):
     """ /add_product/?recipe_id=1&product_id=1&weight=500 """
     
     request_ = validate_request(request)
-
+    
     result = add_product_to_recipe(*request_.values())
 
     data = {
@@ -54,7 +54,6 @@ def cook_products(request):
     request_ = validate_request(request)
 
     result = cook_recipe(*request_.values())
-    print(result)
 
     data = {
         'title': 'Приготовление продуктов',
