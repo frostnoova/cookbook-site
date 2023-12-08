@@ -35,6 +35,6 @@ def show_recipes_without_product(product_id, weight=10):
 
     product_id = int(product_id)
     
-    sub_products = Recipe.objects.prefetch_related('description').filter(Q(products__id=product_id) & Q(description__weight__gte=weight)).values_list('id', flat=True)
+    products_id = Recipe.objects.prefetch_related('description').filter(Q(products__id=product_id) & Q(description__weight__gte=weight)).values_list('id', flat=True)
 
-    return Recipe.objects.exclude(id__in = Subquery(sub_products)).values('id', "name")
+    return Recipe.objects.exclude(id__in = products_id).values('id', "name")
