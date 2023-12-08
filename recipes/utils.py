@@ -1,7 +1,8 @@
 from django.db import IntegrityError
-from django.db.models.expressions import F
+from django.db.models.expressions import F, Subquery
 from django.db.models.query_utils import Q
 from .models import Product, Recipe, RecipeDescription
+
 
 
 def add_product_to_recipe(recipe_id, product_id, weight):
@@ -33,5 +34,7 @@ def cook_recipe(recipe_id, update_value=1):
 def show_recipes_without_product(product_id, weight=10):
 
     product_id = int(product_id)
+    
+    sub_products = Recipe.objects.prefetch_related('description').filter(Q(products__id=product_id) & Q(description__weight__gte=weight)).values_list('id', flat=True)
 
-    return Recipe.objects.prefetch_related('description').exclude(Q(products__id=product_id) & Q(description__weight__gte=weight)).values('id', "name")
+    return Recipe.objects.exclude(id__in = Subquery(sub_products)).values('id', "name")
